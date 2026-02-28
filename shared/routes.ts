@@ -13,8 +13,16 @@ import {
   insertHelmetPurchaseSchema,
   helmetPurchases,
   helmetStockSchema,
+  insertSaddleSaleSchema,
+  saddleSales,
+  insertSaddlePurchaseSchema,
+  saddlePurchases,
+  saddleStockSchema,
   insertDeferredSaleSchema,
   deferredSales,
+  insertDiversPurchaseSchema,
+  diversPurchases,
+  diversStockSchema,
   insertClientSchema,
   clients,
 } from './schema';
@@ -225,7 +233,89 @@ export const api = {
       },
     },
   },
+  saddles: {
+    stock: {
+      get: {
+        method: 'GET' as const,
+        path: '/api/saddles/stock',
+        responses: {
+          200: saddleStockSchema,
+        },
+      },
+    },
+    sales: {
+      list: {
+        method: 'GET' as const,
+        path: '/api/saddles/sales',
+        responses: {
+          200: z.array(z.custom<typeof saddleSales.$inferSelect>()),
+        },
+      },
+      create: {
+        method: 'POST' as const,
+        path: '/api/saddles/sales',
+        input: insertSaddleSaleSchema,
+        responses: {
+          201: z.custom<typeof saddleSales.$inferSelect>(),
+          400: errorSchemas.validation,
+        },
+      },
+      update: {
+        method: 'PUT' as const,
+        path: '/api/saddles/sales/:id',
+        input: insertSaddleSaleSchema.partial(),
+        responses: {
+          200: z.custom<typeof saddleSales.$inferSelect>(),
+          400: errorSchemas.validation,
+          404: errorSchemas.notFound,
+        },
+      },
+      delete: {
+        method: 'DELETE' as const,
+        path: '/api/saddles/sales/:id',
+        responses: {
+          204: z.void(),
+          404: errorSchemas.notFound,
+        },
+      },
+    },
+    purchases: {
+      list: {
+        method: 'GET' as const,
+        path: '/api/saddles/purchases',
+        responses: {
+          200: z.array(z.custom<typeof saddlePurchases.$inferSelect>()),
+        },
+      },
+      create: {
+        method: 'POST' as const,
+        path: '/api/saddles/purchases',
+        input: insertSaddlePurchaseSchema,
+        responses: {
+          201: z.custom<typeof saddlePurchases.$inferSelect>(),
+          400: errorSchemas.validation,
+        },
+      },
+      delete: {
+        method: 'DELETE' as const,
+        path: '/api/saddles/purchases/:id',
+        responses: {
+          204: z.void(),
+          404: errorSchemas.notFound,
+        },
+      },
+    },
+  },
   deferred: {
+    stock: {
+      get: {
+        method: 'GET' as const,
+        path: '/api/deferred/stock',
+        responses: {
+          200: diversStockSchema,
+        },
+      },
+    },
     sales: {
       list: {
         method: 'GET' as const,
@@ -256,6 +346,32 @@ export const api = {
       delete: {
         method: 'DELETE' as const,
         path: '/api/deferred/sales/:id',
+        responses: {
+          204: z.void(),
+          404: errorSchemas.notFound,
+        },
+      },
+    },
+    purchases: {
+      list: {
+        method: 'GET' as const,
+        path: '/api/deferred/purchases',
+        responses: {
+          200: z.array(z.custom<typeof diversPurchases.$inferSelect>()),
+        },
+      },
+      create: {
+        method: 'POST' as const,
+        path: '/api/deferred/purchases',
+        input: insertDiversPurchaseSchema,
+        responses: {
+          201: z.custom<typeof diversPurchases.$inferSelect>(),
+          400: errorSchemas.validation,
+        },
+      },
+      delete: {
+        method: 'DELETE' as const,
+        path: '/api/deferred/purchases/:id',
         responses: {
           204: z.void(),
           404: errorSchemas.notFound,

@@ -163,7 +163,7 @@ export type OilStock = z.infer<typeof oilStockSchema>;
 
 export const helmetSales = sqliteTable("helmet_sales", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  numeroFacture: text("numero_facture").notNull(),
+  numeroFacture: text("numero_facture").default("").notNull(),
   date: text("date").notNull(), // YYYY-MM-DD
   designation: text("designation").notNull(),
   typeClient: text("type_client").notNull(),
@@ -211,7 +211,58 @@ export const helmetStockSchema = z.array(helmetStockRowSchema);
 export type HelmetStockRow = z.infer<typeof helmetStockRowSchema>;
 
 // -----------------------------
-// Modules: Deferred sales (Différé)
+// Modules: Cache Selle (saddle stock + sales)
+// -----------------------------
+
+export const saddleSales = sqliteTable("saddle_sales", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull(), // YYYY-MM-DD
+  tailleXl: integer("taille_xl").default(0).notNull(),
+  tailleXxl: integer("taille_xxl").default(0).notNull(),
+  prix: real("prix").default(0).notNull(),
+  encaissement: text("encaissement").notNull(),
+  client: text("client").default("").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(
+    sql`(unixepoch() * 1000)`,
+  ),
+});
+
+export const insertSaddleSaleSchema = createInsertSchema(saddleSales).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type SaddleSale = typeof saddleSales.$inferSelect;
+export type InsertSaddleSale = z.infer<typeof insertSaddleSaleSchema>;
+
+export const saddlePurchases = sqliteTable("saddle_purchases", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull(), // YYYY-MM-DD
+  tailleXl: integer("taille_xl").default(0).notNull(),
+  tailleXxl: integer("taille_xxl").default(0).notNull(),
+  fournisseur: text("fournisseur").default("").notNull(),
+  prix: real("prix").default(0).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(
+    sql`(unixepoch() * 1000)`,
+  ),
+});
+
+export const insertSaddlePurchaseSchema = createInsertSchema(saddlePurchases).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type SaddlePurchase = typeof saddlePurchases.$inferSelect;
+export type InsertSaddlePurchase = z.infer<typeof insertSaddlePurchaseSchema>;
+
+export const saddleStockSchema = z.object({
+  taille_xl: z.number(),
+  taille_xxl: z.number(),
+});
+export type SaddleStock = z.infer<typeof saddleStockSchema>;
+
+// -----------------------------
+// Modules: Deferred / Divers sales (with stock)
 // -----------------------------
 
 export const deferredSales = sqliteTable("deferred_sales", {
@@ -221,12 +272,40 @@ export const deferredSales = sqliteTable("deferred_sales", {
   numeroTelephone: text("numero_telephone").default("").notNull(),
   typeMoto: text("type_moto").default("").notNull(),
   designation: text("designation").notNull(),
+  quantite: integer("quantite").default(1).notNull(),
   montant: real("montant").default(0).notNull(),
   isSettled: integer("is_settled", { mode: "boolean" }).default(false).notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).default(
     sql`(unixepoch() * 1000)`,
   ),
 });
+
+export const diversPurchases = sqliteTable("divers_purchases", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull(), // YYYY-MM-DD
+  designation: text("designation").notNull(),
+  quantite: integer("quantite").default(0).notNull(),
+  fournisseur: text("fournisseur").default("").notNull(),
+  prix: real("prix").default(0).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(
+    sql`(unixepoch() * 1000)`,
+  ),
+});
+
+export const insertDiversPurchaseSchema = createInsertSchema(diversPurchases).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type DiversPurchase = typeof diversPurchases.$inferSelect;
+export type InsertDiversPurchase = z.infer<typeof insertDiversPurchaseSchema>;
+
+export const diversStockRowSchema = z.object({
+  designation: z.string(),
+  stock: z.number(),
+});
+export const diversStockSchema = z.array(diversStockRowSchema);
+export type DiversStockRow = z.infer<typeof diversStockRowSchema>;
 
 export const insertDeferredSaleSchema = createInsertSchema(deferredSales).omit({
   id: true,

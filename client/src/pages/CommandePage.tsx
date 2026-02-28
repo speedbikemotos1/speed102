@@ -26,7 +26,6 @@ export default function CommandePage() {
   const [data, setData] = useState<Order[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<Omit<Order, "id">>({
@@ -52,15 +51,14 @@ export default function CommandePage() {
   }, []);
 
   const getStatistics = () => {
-    const slicedData = selectedRowIndex !== null ? data.slice(selectedRowIndex) : data;
     const todayString = new Date().toISOString().split('T')[0];
 
     return {
       totalCount: data.length,
-      filteredCount: slicedData.length,
-      totalAvance: slicedData.reduce((acc, curr) => acc + Number(curr.avance), 0),
+      filteredCount: data.length,
+      totalAvance: data.reduce((acc, curr) => acc + Number(curr.avance), 0),
       todayCount: data.filter(item => item.date === todayString).length,
-      isFiltered: selectedRowIndex !== null
+      isFiltered: false,
     };
   };
 
@@ -151,24 +149,22 @@ export default function CommandePage() {
               <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase">Commandes du jour</p>
             </CardContent>
           </Card>
-          <Card className={`bg-white/70 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-xl transition-all rounded-3xl group ${stats.isFiltered ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}>
+          <Card className="bg-white/70 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-xl transition-all rounded-3xl group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-black text-gray-500 uppercase tracking-widest">Commandes (Sél.)</CardTitle>
+              <CardTitle className="text-xs font-black text-gray-500 uppercase tracking-widest">Commandes</CardTitle>
               <div className="p-2 bg-emerald-100 rounded-xl group-hover:bg-emerald-200"><ShoppingCart className="w-4 h-4 text-emerald-600" /></div>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-black text-gray-900 tracking-tighter italic">{stats.filteredCount}</div>
-              {stats.isFiltered && <p className="text-[10px] font-black text-red-600 mt-2 uppercase">Filtré depuis sélection</p>}
             </CardContent>
           </Card>
-          <Card className={`bg-white/70 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-xl transition-all rounded-3xl group ${stats.isFiltered ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}>
+          <Card className="bg-white/70 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-xl transition-all rounded-3xl group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-black text-gray-500 uppercase tracking-widest">Avances (Sél.)</CardTitle>
+              <CardTitle className="text-xs font-black text-gray-500 uppercase tracking-widest">Avances</CardTitle>
               <div className="p-2 bg-green-100 rounded-xl group-hover:bg-green-200"><DollarSign className="w-4 h-4 text-green-600" /></div>
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-black text-red-600 tracking-tighter italic">{stats.totalAvance.toFixed(2)} <span className="text-lg uppercase not-italic">TND</span></div>
-              {stats.isFiltered && <p className="text-[10px] font-black text-red-600 mt-2 uppercase">Filtré depuis sélection</p>}
             </CardContent>
           </Card>
         </div>
@@ -189,11 +185,10 @@ export default function CommandePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((item, index) => (
+                  {data.map((item) => (
                     <TableRow 
                       key={item.id}
-                      className={`cursor-pointer transition-all duration-200 h-16 border-b border-gray-50 group ${selectedRowIndex === index ? 'bg-red-50/80 text-red-700 font-bold hover:bg-red-100/80' : 'hover:bg-gray-50/50'}`}
-                      onClick={() => setSelectedRowIndex(selectedRowIndex === index ? null : index)}
+                      className="transition-all duration-200 h-16 border-b border-gray-50 group hover:bg-gray-50/50"
                     >
                       <TableCell className="py-4 font-bold">{item.nom_prenom}</TableCell>
                       <TableCell className="py-4 font-medium">{item.designation}</TableCell>

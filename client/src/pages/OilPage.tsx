@@ -35,6 +35,7 @@ export default function OilPage() {
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [editingSaleId, setEditingSaleId] = useState<number | null>(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
 
   const [saleForm, setSaleForm] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -53,12 +54,22 @@ export default function OilPage() {
     prix: 0,
   });
 
+  const slicedSales = useMemo(
+    () => (selectedRowIndex !== null ? sales.slice(0, selectedRowIndex + 1) : sales),
+    [selectedRowIndex, sales],
+  );
+
   const totalSoldBidons = useMemo(() => {
-    return sales.reduce((acc, s) => acc + Number(s.huile10w40) + Number(s.huile20w50), 0);
-  }, [sales]);
+    return slicedSales.reduce((acc, s) => acc + Number(s.huile10w40) + Number(s.huile20w50), 0);
+  }, [slicedSales]);
 
   const totalRevenue = useMemo(() => {
-    return sales.reduce((acc, s) => acc + Number(s.prix), 0);
+    return slicedSales.reduce((acc, s) => acc + Number(s.prix), 0);
+  }, [slicedSales]);
+
+  const todayCount = useMemo(() => {
+    const todayString = new Date().toISOString().split('T')[0];
+    return sales.filter(r => r.date === todayString).length;
   }, [sales]);
 
   const handleSubmitSale = async (e: React.FormEvent) => {
@@ -242,7 +253,7 @@ export default function OilPage() {
               <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase">Bidons disponibles</p>
             </CardContent>
           </Card>
-          <Card className="bg-white/70 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl group">
+          <Card className={`bg-white/70 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl group ${selectedRowIndex !== null ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-xs font-black text-gray-500 uppercase tracking-widest">Stock 20W50</CardTitle>
               <div className="p-2 bg-amber-100 rounded-xl group-hover:bg-amber-200 transition-colors"><Droplet className="w-4 h-4 text-orange-600" /></div>
@@ -250,6 +261,16 @@ export default function OilPage() {
             <CardContent>
               <div className="text-4xl font-black text-gray-900 tracking-tighter italic">{stock?.huile_20w50 ?? 0}</div>
               <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase">Bidons disponibles</p>
+            </CardContent>
+          </Card>
+          <Card className={`bg-white/70 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl group ${selectedRowIndex !== null ? "ring-2 ring-red-500 bg-red-50/30" : ""}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-xs font-black text-gray-500 uppercase tracking-widest">Aujourd'hui</CardTitle>
+              <div className="p-2 bg-amber-100 rounded-xl group-hover:bg-amber-200 transition-colors"><TrendingUp className="w-4 h-4 text-orange-600" /></div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-black text-gray-900 tracking-tighter italic">{todayCount}</div>
+              <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase">Ventes du jour</p>
             </CardContent>
           </Card>
           <Card className="bg-white/70 backdrop-blur-sm border-gray-200 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 rounded-3xl group">
@@ -309,15 +330,25 @@ export default function OilPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sales.map((item) => (
-                        <TableRow key={item.id} className="transition-all duration-200 h-16 border-b border-gray-50 group hover:bg-gray-50/50">
+                      {sales.map((item, index) => (
+                        <TableRow
+                          key={item.id}
+                          className={`cursor-pointer transition-all duration-200 h-16 border-b border-gray-50 group ${
+                            selectedRowIndex === index
+                              ? "bg-red-50/80 text-red-700 font-bold hover:bg-red-100/80"
+                              : "hover:bg-gray-50/50"
+                          }`}
+                          onClick={() =>
+                            setSelectedRowIndex(selectedRowIndex === index ? null : index)
+                          }
+                        >
                           <TableCell className="py-4 font-bold">{new Date(item.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                           <TableCell className="py-4 font-medium">{item.huile10w40}</TableCell>
                           <TableCell className="py-4 font-medium">{item.huile20w50}</TableCell>
                           <TableCell className="py-4 font-black text-red-600 italic tracking-tighter">{Number(item.prix).toFixed(2)} TND</TableCell>
                           <TableCell className="py-4 font-bold text-gray-600 uppercase text-[10px] tracking-wider bg-gray-100/30 rounded-lg inline-block my-2 px-3">{item.encaissement}</TableCell>
                           <TableCell className="py-4 font-medium text-gray-500">{item.client || "-"}</TableCell>
-                          <TableCell className="text-right py-4">
+                          <TableCell className="text-right py-4" onClick={(e) => e.stopPropagation()}>
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Button variant="ghost" size="icon" onClick={() => handleEditSale(item)} className="h-10 w-10 rounded-xl text-gray-400 hover:text-gray-900 hover:bg-white shadow-sm transition-all"><Edit2 className="w-4 h-4" /></Button>
                               <Button variant="ghost" size="icon" onClick={() => handleDeleteSale(item.id)} className="h-10 w-10 rounded-xl text-red-400 hover:text-red-700 hover:bg-white shadow-sm transition-all"><Trash2 className="w-4 h-4" /></Button>
